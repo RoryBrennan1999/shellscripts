@@ -1,0 +1,38 @@
+#! /bin/bash
+
+# Rory Brennan 18237606
+# sys_info
+# This is a simple script that displays the following:
+# 1. Name of user, user ID, machine host name and type
+# 2. No. of file partitions, % of used space and used space in GB
+# 3. CPU model name, speed, cache size
+# 4. Total memory size and size of free memory
+
+echo -e ""$(tput bold)"System Info\n"$(tput sgr0)"" # Bold Title
+
+# 1.
+user=$USER # USER -> user name global environment variable
+user_id=$UID # UID -> user ID global environment variable
+machine_name=$DESKTOP_SESSION # DESKTOP_SESSION -> machine name global environment variable
+machine_type=$(set | grep "MACHTYPE") # MACHTYPE -> machine type global environment variable
+echo -e "USER: "$user" \nID: "$user_id" \nMachine Name: "$machine_name" \n"$machine_type" \n"
+
+# 2.
+disks=$(df | wc -l )
+usedspace=$(df ~ | tail -1 | awk '{print $5}' | sed 's/%//' ) # sed removes % so that arithmetic can occur
+freeGB=$(df ~ -h | tail -1 | awk '{print $4}' | sed 's/G//' ) # sed removes G
+echo -e "Partitions: "$((disks-1))" \n% Free Space: "$((100-usedspace))"% \nGB Used Space: "$((20-freeGB))" GB \n" # 20 GB = Total Space assigned to VM
+
+# 3.
+cpuname=$(sed -n '5,5 p' /proc/cpuinfo) # cpuinfo file has all information needed
+echo $cpuname
+cpu_speed=$(sed -n '7,7 p' /proc/cpuinfo)
+echo $cpu_speed
+cache_size=$(sed -n '8,8 p' /proc/cpuinfo)
+echo -e ""$cache_size"\n"
+
+# 4.
+totalmemory=$(sed -n '1,1 p' /proc/meminfo) # meminfo file has all information needed
+echo $totalmemory
+freememory=$(sed -n '2,2 p' /proc/meminfo)
+echo $freememory

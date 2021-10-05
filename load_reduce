@@ -1,0 +1,59 @@
+#! /bin/bash
+
+# Rory Brennan 18237606
+# load_reduce
+# This is a bash script that displays the following:
+# 1. No. of processes existing in the system.
+# 2. No. of users with processes and number of processes per said user
+# 3. Command name and user for busiest process
+# 4. Kill any process that has above 60% utilization and display its name
+
+./busy_wait & # Process to be killed
+
+#1
+numproc=$(ps -ef | wc -l)
+echo -e "No. of Processes: "$numproc" \n"
+
+#2
+# Make list of all users to file: names
+ps aux | awk '$1 !="USER" {print $1}'> names
+
+# Make a unique file of users: uniq_list
+sort names | uniq > uniq_list
+
+# Column titles
+echo -e "Procs \t Users \n"
+
+# Read each username and count entries
+while read xuser
+do
+x=$( grep "$xuser" names | wc -l)
+echo -e "$x \t $xuser"
+done < uniq_list
+
+echo -e "\n"
+
+# Remove temporary files
+rm names uniq_list
+
+#3
+echo -e "Busiest Process:"
+# Output busiest process and its name,PID,command and % CPU usage
+ps -eo user,pid,cmd,%cpu --sort=-%cpu |head -2 > busyprocess
+cat busyprocess
+
+#4
+echo -e "\n"
+# Obtain PID and CPU usage into separate variables
+killproc=$(cat busyprocess | tail -1 | awk '{print $5}')
+killprocPID=$(cat busyprocess | tail -1 | awk '{print $2}')
+if(($( echo $killproc | sed 's/\..$//') > 60));then # Check for too much usage
+	echo -e "PID of Process to be killed: "$killprocPID""
+	kill $killprocPID # Kill busiest process
+	echo -e ""$(cat busyprocess | tail -1 | awk '{print $4}')" killed successfully!"
+else
+	echo "No processes to be killed....."
+fi
+# Remove temporary files
+rm busyprocess
+

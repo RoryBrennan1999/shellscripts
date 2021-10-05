@@ -1,0 +1,44 @@
+#! /bin/bash
+
+# Rory Brennan 18237606
+# file_stat
+# This is a simple script that displays the following:
+# 1. Largest File in Home Directory
+# 2. Total No. of Files in Home Directory (and subdirectories)
+# 3. Total No. of Directories in Home Directory
+# 4. No. of free 4K Blocks & % of used space
+# 5. Echo a warning based on free 4K blocks
+
+# 1.
+large_file=$(ls -l ~ | sort -g -k5 -r | head -1 | awk '{print $9}')
+echo "Largest File in Home Directory: "
+echo $large_file
+
+# 2.
+numberoffiles=$(find ~ -type f | wc -l )
+echo "Total No. of Files in Home Directory: "
+echo $numberoffiles
+
+# 3.
+directories=$(find ~/* -type d | wc -l )
+echo "Total No. of Directories in Home Directory: "
+echo $directories
+
+# 4.
+usedspace=$(df ~ | tail -1 | awk '{print $5}')
+echo "Used Space: "
+echo $usedspace
+
+usedblocks=$(df ~ -B4K | tail -1 | awk '{print $4}') # -B4K displays 4K blocks rather than 1K
+freeGB=$(df ~ -h | tail -1 | awk '{print $4}')
+echo "No. of free 4K Blocks: "
+echo $usedblocks
+
+# 5.
+RED='\033[0;31m' # Terminal escape sequences for colours
+GREEN='\033[0;32m'
+if(($usedblocks<5000000));then
+	echo -e "${RED}Disk space is running low, "$usedspace" is used."
+else
+	echo -e "${GREEN}Disk space is sufficient, "$freeGB"B is left."
+fi
